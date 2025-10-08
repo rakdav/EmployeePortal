@@ -2,62 +2,48 @@
 using EmployeePortal.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace EmployeePortal.Services
 {
-    public class EmployeeService
+    public class EmployeeService : IEmployerService
     {
-        private readonly ApplicationDbContext _context;
-        public EmployeeService(ApplicationDbContext dbContext)
+        private readonly ApplicationDbContext context;
+        public EmployeeService(ApplicationDbContext _context)
         {
-            this._context = dbContext;
+            this.context = _context;
         }
-        public async Task<List<Employee>> GetAll()
+        public async Task<IEnumerable<Employee>> GetAll()
         {
-            return await _context.Employees.ToListAsync();
+            return await context.Employees.ToListAsync();
         }
         public async Task<Employee> GetById(Guid id)
         {
-            var employee = await _context.Employees.FindAsync(id);
-            if (employee == null) return null!;
-            return employee;
+            return await context.Employees.FindAsync(id);
         }
-        public async Task<Employee> Create(Employee employee)
+        public async Task Create(Employee employee)
         {
             employee.Id = Guid.NewGuid();
-            _context.Employees.Add(employee);
-            await _context.SaveChangesAsync();
-            return employee;
+            context.Employees.Add(employee);
+            await context.SaveChangesAsync();
         }
 
-        public async Task<Employee> Update(Guid id, Employee employee)
+        public async Task Update(Employee employee)
         {
-            if (id != employee.Id) return null!;
 
-            _context.Entry(employee).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!await _context.Employees.AnyAsync(e => e.Id == id))
-                    return null!;
-                throw;
-            }
-
-            return employee;
+            context.Entry(employee).State = EntityState.Modified;
+            context.Employees.Update(employee);
+            await context.SaveChangesAsync();
+       
         }
-        public async Task<Employee> Delete(Guid id)
+        public async Task Delete(Guid id)
         {
-            var employee = await _context.Employees.FindAsync(id);
-            if (employee == null) return null!;
-
-            _context.Employees.Remove(employee);
-            await _context.SaveChangesAsync();
-
-            return employee;
+            var employee = await context.Employees.FindAsync(id);
+            if (employee != null)
+            {
+                context.Employees.Remove(employee);
+                await context.SaveChangesAsync();
+            }
         }
     }
 }

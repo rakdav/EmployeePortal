@@ -20,9 +20,10 @@ namespace EmployeePortal.Controllers
 
         // GET: api/employees
         [HttpGet]
-        public async Task<ActionResult<List<Employee>>> GetAll()
+        public async Task<ActionResult<IEnumerable<Employee>>> GetAll()
         {
-            return await employerService.GetAll();
+            var employers= await employerService.GetAll();
+            return Ok(employers);
         }
 
         // GET: api/employees/{id}
@@ -31,23 +32,24 @@ namespace EmployeePortal.Controllers
         {
             var employee = await employerService.GetById(id);
             if (employee == null) return NotFound();
-            return employee;
+            return Ok(employee);
         }
 
         // POST: api/employees
         [HttpPost]
-        public async Task<ActionResult<Employee>> Create(Employee employee)
+        public async Task<ActionResult<Employee>> Create([FromBody]Employee employee)
         {
-            return await employerService.Create(employee);
+            await employerService.Create(employee);
+            return CreatedAtAction(nameof(GetById), new { id = employee.Id }, employee);
+
         }
 
         // PUT: api/employees/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, Employee employee)
+        public async Task<IActionResult> Update(Guid id,[FromBody] Employee employee)
         {
             if (id != employee.Id) return BadRequest();
-            Employee emp= await employerService.Update(id,employee);
-            if(emp!=null) return Ok(emp);  
+            await employerService.Update(employee);
             return NoContent();
         }
 
@@ -55,9 +57,8 @@ namespace EmployeePortal.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var employee = await employerService.Delete(id);
-            if (employee == null) return NotFound();
-            return Ok(employee);
+            await employerService.Delete(id);
+            return NoContent();
         }
     }
 }
