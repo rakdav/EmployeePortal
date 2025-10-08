@@ -1,5 +1,6 @@
 ﻿using EmployeePortal.Data;
 using EmployeePortal.Models;
+using EmployeePortal.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,24 +12,24 @@ namespace EmployeePortal.Controllers
     public class EmployeesController : ControllerBase
     {
 
-            private readonly ApplicationDbContext _context;
-            public EmployeesController(ApplicationDbContext dbContext)
-            {
-                this._context = dbContext;
-            }
+        private readonly  EmployeeService employerService;
+        public EmployeesController(EmployeeService _employerService)
+        {
+            this.employerService = _employerService;
+        }
 
         // GET: api/employees
         [HttpGet]
         public async Task<ActionResult<List<Employee>>> GetAll()
         {
-            return await _context.Employees.ToListAsync();
+            return await employerService.GetAll();
         }
 
         // GET: api/employees/{id}
         [HttpGet("{id}")]
         public async Task<ActionResult<Employee>> GetById(Guid id)
         {
-            var employee = await _context.Employees.FindAsync(id);
+            var employee = await employerService.GetById(id);
             if (employee == null) return NotFound();
             return employee;
         }
@@ -37,33 +38,16 @@ namespace EmployeePortal.Controllers
         [HttpPost]
         public async Task<ActionResult<Employee>> Create(Employee employee)
         {
-            employee.Id = Guid.NewGuid();
-            _context.Employees.Add(employee);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetById), new { id = employee.Id }, employee);
+            return await employerService.Create(employee);
         }
-
-
 
         // PUT: api/employees/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, Employee employee)
         {
             if (id != employee.Id) return BadRequest();
-
-            _context.Entry(employee).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!await _context.Employees.AnyAsync(e => e.Id == id))
-                    return NotFound();
-                throw;
-            }
-
+            Employee emp= await employerService.Update(id,employee);
+            if(emp!=null) return Ok(emp);  
             return NoContent();
         }
 
@@ -71,13 +55,9 @@ namespace EmployeePortal.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var employee = await _context.Employees.FindAsync(id);
+            var employee = await employerService.Delete(id);
             if (employee == null) return NotFound();
-
-            _context.Employees.Remove(employee);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            return Ok(employee);
         }
     }
 }
