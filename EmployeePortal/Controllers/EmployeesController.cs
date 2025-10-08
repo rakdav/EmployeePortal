@@ -17,9 +17,6 @@ namespace EmployeePortal.Controllers
                 this._context = dbContext;
             }
 
-
-
-
         // GET: api/employees
         [HttpGet]
         public async Task<ActionResult<List<Employee>>> GetAll()
@@ -82,10 +79,5 @@ namespace EmployeePortal.Controllers
 
             return NoContent();
         }
-
-
-
-
-
     }
 }
